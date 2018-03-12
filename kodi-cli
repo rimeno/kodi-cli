@@ -90,6 +90,27 @@ function queue_yt_videos {
     echo " done."
 }
 
+function status {
+    # Get Active players first
+    output=`xbmc_req '{"jsonrpc": "2.0", "method": "Player.GetActivePlayers", "id": 99}' true`
+    player_id=`echo $output | parse_json "playerid"`
+    if [ -z "$player_id" ] ; then
+        ret=""
+    else
+        if [ "$player_id" -eq 0 ] ; then
+            output=`xbmc_req '{"jsonrpc": "2.0", "method": "Player.GetItem", "params": { "properties": ["title", "album", "artist", "duration", "thumbnail", "file", "fanart", "streamdetails"], "playerid": 0 }, "id": "AudioGetItem"}' true`
+            title=`echo $output | parse_json "title"`
+            artist=`echo $output | parse_json "artist"`
+            ret="Playing audio : $title $artist"
+        else
+            output=`xbmc_req '{"jsonrpc": "2.0", "method": "Player.GetItem", "params": { "properties": ["title", "album", "artist", "season", "episode", "duration", "showtitle", "tvshowid", "thumbnail", "file", "fanart", "streamdetails"], "playerid": 1 }, "id": "VideoGetItem"}' true`
+            title=`echo $output | parse_json "title"`
+            ret="Playing video : $title"
+        fi
+    fi
+    echo $ret
+}
+
 function play_pause {
     # Get Active players first
     output=`xbmc_req '{"jsonrpc": "2.0", "method": "Player.GetActivePlayers", "id": 99}' true`
@@ -236,7 +257,8 @@ function fullscreen_toggle {
 
 function show_help {
 
-echo -e "\n kodi-cli -[p|i|h|s|y youtube URL/ID|t 'text to send']\n\n" \
+echo -e "\n kodi-cli -[S|p|i|h|s|y youtube URL/ID|t 'text to send']\n\n" \
+    "-S Status\n" \
     "-p Play/Pause the current played video\n" \
     "-s Stop the current played video\n" \
     "-j Skip forward in the current played video\n" \
@@ -300,7 +322,7 @@ if [ -z "$KODI_HOST" ]; then
 fi
 
 ## Process command line arguments
-while getopts "yqopstiudfhvmnjkl" opt; do
+while getopts "yqopSstiudfhvmnjkl" opt; do
     case $opt in
         l)  #play default playlist
             play_playlist
@@ -320,6 +342,9 @@ while getopts "yqopstiudfhvmnjkl" opt; do
             ;;
         p)
             play_pause
+            ;;
+        S)
+            status
             ;;
         s)
             stop

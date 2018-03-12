@@ -20,6 +20,7 @@ Password
 
 ## Arguments
 ```
+ -S Status of Kodi
  -p Play/Pause the current played video
  -s Stop the current played video
  -j Skip forward in the current played video     
